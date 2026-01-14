@@ -18,6 +18,33 @@ export interface SystemStatus {
   immich_api: ConnectionStatus;
 }
 
+// Configuration Types
+export interface ConfigOverrides {
+  ms_photos_db: boolean;
+  immich_api_url: boolean;
+  immich_api_key: boolean;
+  immich_db: boolean;
+}
+
+export interface AppConfig {
+  ms_photos_db: string;
+  ms_photos_db_path: string;
+  immich_api_url: string;
+  immich_api_key_set: boolean;
+  immich_db_host: string;
+  immich_db_port: number;
+  immich_db_name: string;
+  immich_db_user: string;
+  immich_db_password_set: boolean;
+  has_overrides: ConfigOverrides;
+}
+
+export interface ConfigUpdateResult {
+  success: boolean;
+  status: ConnectionStatus;
+  config: AppConfig;
+}
+
 export interface PersonMatch {
   ms_person_id: number;
   ms_person_name: string;

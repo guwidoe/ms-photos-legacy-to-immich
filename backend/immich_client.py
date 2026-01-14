@@ -4,17 +4,22 @@ Immich API client for thumbnails and person updates.
 
 import httpx
 from typing import Optional
-from config import get_settings
+from config import get_effective_immich_api_url, get_effective_immich_api_key
 
 
 class ImmichClient:
     """Client for Immich REST API."""
-    
-    def __init__(self):
-        settings = get_settings()
-        self.base_url = settings.immich_api_url.rstrip('/')
-        self.api_key = settings.immich_api_key
-    
+
+    @property
+    def base_url(self) -> str:
+        """Get the current Immich API URL (dynamically from config)."""
+        return get_effective_immich_api_url().rstrip('/')
+
+    @property
+    def api_key(self) -> str:
+        """Get the current Immich API key (dynamically from config)."""
+        return get_effective_immich_api_key()
+
     def _get_headers(self) -> dict:
         return {
             "x-api-key": self.api_key,

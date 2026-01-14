@@ -1,6 +1,6 @@
 // API Client
 
-import type { SystemStatus, MatchingResult, ValidationResult, ApplyResult, PersonMatch, MergeAnalysisResult, MatchDetailsResult, UnmatchedResult, AnalyticsResult, UnclusteredPreviewResult, ApplyUnclusteredResult, FullAnalysisResult, UnclusteredDetailsResult, UnrecognizedPreviewResult, UnrecognizedDetailsResult, CreateFaceItem, CreateFacesResult } from './types';
+import type { SystemStatus, MatchingResult, ValidationResult, ApplyResult, PersonMatch, MergeAnalysisResult, MatchDetailsResult, UnmatchedResult, AnalyticsResult, UnclusteredPreviewResult, ApplyUnclusteredResult, FullAnalysisResult, UnclusteredDetailsResult, UnrecognizedPreviewResult, UnrecognizedDetailsResult, CreateFaceItem, CreateFacesResult, AppConfig, ConfigUpdateResult } from './types';
 
 const API_BASE = '/api';
 
@@ -207,6 +207,48 @@ export async function createFaces(params: {
   dry_run: boolean;
 }): Promise<CreateFacesResult> {
   return fetchAPI('/create-faces/apply', {
+    method: 'POST',
+    body: JSON.stringify(params),
+  });
+}
+
+// ============================================================================
+// Configuration API - for manual settings via UI
+// ============================================================================
+
+// Get current configuration
+export async function getConfig(): Promise<AppConfig> {
+  return fetchAPI('/config');
+}
+
+// Update MS Photos database path
+export async function updateMSPhotosDbPath(path: string): Promise<ConfigUpdateResult> {
+  return fetchAPI('/config/ms-photos-db', {
+    method: 'POST',
+    body: JSON.stringify({ path }),
+  });
+}
+
+// Update Immich API settings
+export async function updateImmichApi(params: {
+  url?: string;
+  api_key?: string;
+}): Promise<ConfigUpdateResult> {
+  return fetchAPI('/config/immich-api', {
+    method: 'POST',
+    body: JSON.stringify(params),
+  });
+}
+
+// Update Immich database settings
+export async function updateImmichDb(params: {
+  host?: string;
+  port?: number;
+  name?: string;
+  user?: string;
+  password?: string;
+}): Promise<ConfigUpdateResult> {
+  return fetchAPI('/config/immich-db', {
     method: 'POST',
     body: JSON.stringify(params),
   });

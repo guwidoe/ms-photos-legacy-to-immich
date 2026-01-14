@@ -12,7 +12,13 @@ from typing import Optional
 import asyncio
 from dataclasses import asdict
 
-from config import get_settings
+from config import (
+    get_settings,
+    get_current_config,
+    update_ms_photos_db,
+    update_immich_api,
+    update_immich_db,
+)
 from database import test_ms_photos_connection, test_immich_connection
 from immich_client import get_immich_client
 from services.matching import find_face_position_matches, find_definitive_matches, find_unmatched_people, get_match_analytics, run_full_analysis, PersonMatch, UnmatchedPerson
@@ -74,10 +80,83 @@ async def get_stats():
     """Get detailed statistics from both databases."""
     ms_stats = test_ms_photos_connection()
     immich_stats = test_immich_connection()
-    
+
     return {
         "ms_photos": ms_stats if ms_stats.get("connected") else None,
         "immich": immich_stats if immich_stats.get("connected") else None,
+    }
+
+
+# ============================================================================
+# Configuration Endpoints
+# ============================================================================
+
+@app.get("/api/config")
+async def get_config():
+    """Get current configuration (with sensitive values masked)."""
+    return get_current_config()
+
+
+class MSPhotosDbConfig(BaseModel):
+    path: str
+
+
+@app.post("/api/config/ms-photos-db")
+async def update_ms_photos_db_config(config: MSPhotosDbConfig):
+    """Update MS Photos database path at runtime."""
+    update_ms_photos_db(config.path)
+    # Test the new connection
+    status = test_ms_photos_connection()
+    return {
+        "success": status.get("connected", False),
+        "status": status,
+        "config": get_current_config(),
+    }
+
+
+class ImmichApiConfig(BaseModel):
+    url: Optional[str] = None
+    api_key: Optional[str] = None
+
+
+@app.post("/api/config/immich-api")
+async def update_immich_api_config(config: ImmichApiConfig):
+    """Update Immich API settings at runtime."""
+    update_immich_api(url=config.url, api_key=config.api_key)
+    # Test the new connection
+    client = get_immich_client()
+    status = await client.test_connection()
+    return {
+        "success": status.get("connected", False),
+        "status": status,
+        "config": get_current_config(),
+    }
+
+
+class ImmichDbConfig(BaseModel):
+    host: Optional[str] = None
+    port: Optional[int] = None
+    name: Optional[str] = None
+    user: Optional[str] = None
+    password: Optional[str] = None
+
+
+@app.post("/api/config/immich-db")
+async def update_immich_db_config(config: ImmichDbConfig):
+    """Update Immich database settings at runtime."""
+    update_immich_db(
+        host=config.host,
+        port=config.port,
+        name=config.name,
+        user=config.user,
+        password=config.password,
+    )
+    # Test the new connection
+    status = test_immich_connection()
+    return {
+        "success": status.get("connected", False),
+        "status": status,
+        "config": get_current_config(),
     }
 
 

@@ -6,14 +6,17 @@ import sqlite3
 import psycopg2
 from contextlib import contextmanager
 from typing import Generator
-from config import get_settings
+from config import (
+    get_effective_ms_photos_db_path,
+    get_effective_immich_db_config,
+)
 
 
 @contextmanager
 def get_ms_photos_connection() -> Generator[sqlite3.Connection, None, None]:
     """Get connection to MS Photos SQLite database."""
-    settings = get_settings()
-    conn = sqlite3.connect(settings.ms_photos_db_path)
+    db_path = get_effective_ms_photos_db_path()
+    conn = sqlite3.connect(db_path)
     conn.create_collation(
         "NoCaseUnicode",
         lambda x, y: (x.lower() > y.lower()) - (x.lower() < y.lower())
@@ -28,13 +31,13 @@ def get_ms_photos_connection() -> Generator[sqlite3.Connection, None, None]:
 @contextmanager
 def get_immich_connection() -> Generator:
     """Get connection to Immich PostgreSQL database."""
-    settings = get_settings()
+    db_config = get_effective_immich_db_config()
     conn = psycopg2.connect(
-        host=settings.immich_db_host,
-        port=settings.immich_db_port,
-        dbname=settings.immich_db_name,
-        user=settings.immich_db_user,
-        password=settings.immich_db_password,
+        host=db_config["host"],
+        port=db_config["port"],
+        dbname=db_config["name"],
+        user=db_config["user"],
+        password=db_config["password"],
     )
     try:
         yield conn
@@ -44,9 +47,9 @@ def get_immich_connection() -> Generator:
 
 def test_ms_photos_connection() -> dict:
     """Test MS Photos database connection and return stats."""
-    settings = get_settings()
-    if not settings.ms_photos_db_path.exists():
-        return {"connected": False, "error": f"Database not found: {settings.ms_photos_db_path}"}
+    db_path = get_effective_ms_photos_db_path()
+    if not db_path.exists():
+        return {"connected": False, "error": f"Database not found: {db_path}"}
     
     try:
         with get_ms_photos_connection() as conn:
